@@ -356,6 +356,19 @@
     flex-shrink: 0;
   }
   .btn-ex-remove:hover { background: #ffe0e0; color: var(--danger); }
+  .ex-val-input {
+    width: 90px;
+    padding: 8px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--surface2);
+    outline: none;
+    transition: border-color 0.15s;
+    flex-shrink: 0;
+  }
+  .ex-val-input:focus { border-color: var(--accent); background: #fff; }
 
   /* ─── BMI Display ─── */
   .bmi-display {
@@ -871,18 +884,6 @@
           </div>
         </div>
 
-        <!-- BMI自動計算 -->
-        <div id="bmi-display" class="bmi-display" style="display:none">
-          <div>
-            <div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:2px">BMI</div>
-            <span class="bmi-value" id="bmi-value">--</span>
-          </div>
-          <div style="text-align:right">
-            <span class="bmi-label" id="bmi-label">--</span>
-            <div class="bmi-detail" id="bmi-detail"></div>
-          </div>
-        </div>
-
         <!-- 運動 -->
         <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -890,7 +891,8 @@
             <button class="btn-ex-add" onclick="addExerciseRow()">＋ 追加</button>
           </div>
           <div class="exercise-select-wrap" id="exercise-rows"></div>
-          <textarea id="exercise-memo" class="memo-textarea" style="min-height:44px;margin-top:8px;font-size:13px" placeholder="運動の詳細（距離・時間・内容など）" rows="2"></textarea>
+          <textarea id="exercise-memo" class="memo-textarea" style="min-height:44px;margin-top:8px;font-size:13px" placeholder="備考（例：公園で実施、膝が痛いなど）" rows="2"></textarea>
+          <div style="font-size:11px;color:var(--text3);text-align:right;margin-top:2px">備考</div>
         </div>
       </div>
 
@@ -1374,11 +1376,17 @@ async function loadDayData() {
       const validEx = ['ウォーク','筋トレ','ストレッチ','スクワット','その他'];
       let memoVal = '';
       parts.forEach(p => {
-        if (validEx.includes(p)) {
-          state.exerciseList.push(p);
-          addExerciseRow(p);
+        if (p.startsWith('備考:')) {
+          memoVal = p.slice(3);
         } else if (p.startsWith('memo:')) {
-          memoVal = p.slice(5);
+          memoVal = p.slice(5); // 旧データ互換
+        } else {
+          const colonIdx = p.indexOf(':');
+          const name = colonIdx >= 0 ? p.slice(0, colonIdx) : p;
+          const val  = colonIdx >= 0 ? p.slice(colonIdx + 1) : '';
+          if (validEx.includes(name)) {
+            addExerciseRow(name, val);
+          }
         }
       });
       document.getElementById('exercise-memo').value = memoVal;
@@ -1416,8 +1424,8 @@ async function saveRecord() {
     const date = state.currentDate;
     const exMemo = document.getElementById('exercise-memo').value.trim();
     const exerciseVal = [
-      ...state.exerciseList,
-      ...(exMemo ? ['memo:' + exMemo] : [])
+      ...state.exerciseList.map(e => e.val ? `${e.name}:${e.val}` : e.name),
+      ...(exMemo ? ['備考:' + exMemo] : [])
     ].join(',');
     const row = [
       date,
@@ -1465,33 +1473,57 @@ function setBowel(val, silent = false) {
 const EX_OPTIONS = ['', 'ウォーク', '筋トレ', 'ストレッチ', 'スクワット', 'その他'];
 const EX_ICONS   = {'ウォーク':'🚶','筋トレ':'🏋️','ストレッチ':'🧘','スクワット':'🦵','その他':'✨'};
 
-function addExerciseRow(preset = '') {
+function addExerciseRow(preset = '', presetVal = '') {
   const wrap = document.getElementById('exercise-rows');
   const row = document.createElement('div');
   row.className = 'exercise-row';
+
   const sel = document.createElement('select');
   sel.className = 'exercise-select';
   sel.innerHTML = EX_OPTIONS.map(o =>
     `<option value="${o}" ${o === preset ? 'selected' : ''}>${o ? EX_ICONS[o] + ' ' + o : '── 選択してください ──'}</option>`
   ).join('');
   if (preset) sel.classList.add('selected');
-  sel.onchange = () => {
-    sel.classList.toggle('selected', !!sel.value);
-    syncExerciseList();
-  };
+
+  // 回数/時間入力欄
+  const valInput = document.createElement('input');
+  valInput.type = 'text';
+  valInput.className = 'ex-val-input';
+  valInput.placeholder = '回数・時間';
+  valInput.value = presetVal || '';
+
   const rmBtn = document.createElement('button');
   rmBtn.className = 'btn-ex-remove';
   rmBtn.textContent = '✕';
   rmBtn.onclick = () => { row.remove(); syncExerciseList(); };
+
+  sel.onchange = () => {
+    sel.classList.toggle('selected', !!sel.value);
+    // プレースホルダーを種目に合わせて変更
+    const placeholders = {'ウォーク':'例: 30分','筋トレ':'例: 20分','ストレッチ':'例: 15分','スクワット':'例: 20回','その他':'回数・時間'};
+    valInput.placeholder = placeholders[sel.value] || '回数・時間';
+    syncExerciseList();
+  };
+  // 初期プレースホルダー設定
+  if (preset) {
+    const placeholders = {'ウォーク':'例: 30分','筋トレ':'例: 20分','ストレッチ':'例: 15分','スクワット':'例: 20回','その他':'回数・時間'};
+    valInput.placeholder = placeholders[preset] || '回数・時間';
+  }
+
   row.appendChild(sel);
+  row.appendChild(valInput);
   row.appendChild(rmBtn);
   wrap.appendChild(row);
   syncExerciseList();
 }
 
 function syncExerciseList() {
-  state.exerciseList = Array.from(document.querySelectorAll('#exercise-rows .exercise-select'))
-    .map(s => s.value).filter(Boolean);
+  const rows = document.querySelectorAll('#exercise-rows .exercise-row');
+  state.exerciseList = Array.from(rows).map(r => {
+    const sel = r.querySelector('.exercise-select');
+    const val = r.querySelector('.ex-val-input');
+    return sel && sel.value ? { name: sel.value, val: val ? val.value.trim() : '' } : null;
+  }).filter(Boolean);
 }
 
 // ===================================================
@@ -1644,8 +1676,11 @@ async function loadHistory() {
       const dStr = `${d.getMonth()+1}月${d.getDate()}日（${'日月火水木金土'[d.getDay()]}）`;
       // 運動アイコン表示
       const exMap = {'ウォーク':'🚶','筋トレ':'🏋️','ストレッチ':'🧘','スクワット':'🦵','その他':'✨'};
-      const exKeys = (exercise||'').split(',').filter(k => exMap[k]);
-      const exIcons = exKeys.map(k => exMap[k]).join('');
+      const exParts = (exercise||'').split(',').filter(p => p && !p.startsWith('備考:') && !p.startsWith('memo:'));
+      const exIcons = exParts.map(p => {
+        const name = p.includes(':') ? p.split(':')[0] : p;
+        return exMap[name] || '';
+      }).join('');
       // メモプレビュー（先頭30文字）
       const memoPreview = memo ? memo.slice(0,30) + (memo.length > 30 ? '…' : '') : '';
       item.innerHTML = `
@@ -1663,8 +1698,10 @@ async function loadHistory() {
           ${lunch ? `<div class="detail-row"><span>昼食</span><span>${lunch}</span></div>` : ''}
           ${dinner ? `<div class="detail-row"><span>夕食</span><span>${dinner}</span></div>` : ''}
           ${snack ? `<div class="detail-row"><span>間食</span><span>${snack}</span></div>` : ''}
-          ${exKeys.length || (() => { const m=(exercise||'').split(',').find(p=>p.startsWith('memo:')); return m?m.slice(5):''; })()
-            ? `<div class="detail-row"><span>運動</span><span>${exIcons} ${(() => { const m=(exercise||'').split(',').find(p=>p.startsWith('memo:')); return m?m.slice(5):''; })()}</span></div>` : ''}
+          ${exParts.length ? `<div class="detail-row"><span>運動</span><span>${exParts.map(p => {
+            const [name, val] = p.includes(':') ? [p.split(':')[0], p.split(':').slice(1).join(':')] : [p, ''];
+            return (exMap[name]||'') + ' ' + name + (val ? ' ' + val : '');
+          }).join('、')}</span></div>` : ''}
           ${memo ? `<div class="detail-row" style="align-items:flex-start"><span>メモ</span><span style="white-space:pre-wrap;word-break:break-word">${memo}</span></div>` : ''}
           <div class="detail-photos" id="dp-${date}"></div>
           <button style="margin-top:10px;font-size:12px;padding:5px 12px;border:1.5px solid var(--accent);border-radius:6px;background:none;color:var(--accent);cursor:pointer;font-weight:600" onclick="editDay('${date}')">この日を編集</button>
