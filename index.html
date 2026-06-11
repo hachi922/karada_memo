@@ -1159,8 +1159,18 @@ function requestAccessToken() {
     client_id: config.clientId,
     scope: SCOPES,
     callback: async (tokenResponse) => {
-      if (tokenResponse.error) { toast('認証エラー: ' + tokenResponse.error); return; }
+      console.log('tokenResponse:', JSON.stringify(tokenResponse));
+      if (tokenResponse.error) {
+        toast('認証エラー: ' + tokenResponse.error + ' / ' + (tokenResponse.error_description || ''));
+        console.error('token error:', tokenResponse);
+        return;
+      }
+      if (!tokenResponse.access_token) {
+        toast('アクセストークンが取得できませんでした');
+        return;
+      }
       state.accessToken = tokenResponse.access_token;
+      console.log('access_token取得成功、initApp開始');
       await initApp();
     },
   });
