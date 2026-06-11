@@ -1187,8 +1187,13 @@ window.addEventListener('load', () => {
 
 async function initApp() {
   // まずアプリ画面を表示
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app').style.display = '';
+  const loginEl = document.getElementById('login-screen');
+  const appEl = document.getElementById('app');
+  loginEl.style.display = 'none';
+  loginEl.style.visibility = 'hidden';
+  appEl.style.display = 'block';
+  appEl.style.visibility = 'visible';
+  console.log('initApp: 画面切り替え完了');
 
   // Init date
   const today = todayStr();
