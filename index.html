@@ -787,18 +787,20 @@
     <div class="login-sub">体重・食事・写真を毎日記録。Googleドライブで同期します。</div>
   </div>
   <div id="g_id_onload"
-       data-client_id="YOUR_CLIENT_ID"
+       data-client_id=""
        data-callback="handleCredentialResponse"
        data-auto_prompt="false">
   </div>
-  <div class="g_id_signin"
-       data-type="standard"
-       data-size="large"
-       data-theme="outline"
-       data-text="Googleアカウントでログイン"
-       data-shape="rectangular"
-       data-logo_alignment="left">
-  </div>
+  <button onclick="requestAccessToken()" style="
+    display:flex;align-items:center;gap:10px;
+    background:#fff;border:1.5px solid #ddd;border-radius:6px;
+    padding:12px 24px;font-size:15px;font-weight:600;color:#444;
+    cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.1);
+    transition:box-shadow 0.15s;
+  " onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.15)'" onmouseout="this.style.boxShadow='0 1px 4px rgba(0,0,0,0.1)'">
+    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20" alt="Google">
+    Googleでログイン
+  </button>
   <button onclick="openSetup()" style="background:var(--accent-light);border:none;border-radius:var(--radius-sm);padding:10px 20px;font-size:13px;color:var(--accent-dark);font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px">
     ⚙️ 初期設定を開く
   </button>
@@ -1824,8 +1826,10 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('record-date').value = today;
   document.getElementById('history-month').value = today.slice(0,7);
 
-  if (!config.clientId) {
-    setTimeout(() => openSetup(), 800);
+  if (config.clientId) {
+    document.getElementById('g_id_onload').setAttribute('data-client_id', config.clientId);
+  } else {
+    setTimeout(() => openSetup(), 300);
   }
   calcBMI();
 });
