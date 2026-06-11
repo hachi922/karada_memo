@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>からだ記録</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root {
+    --bg: #f7f9fb;
+    --surface: #ffffff;
+    --surface2: #f0f4f7;
+    --accent: #4a9e8e;
+    --accent-light: #d0ede8;
+    --accent-dark: #2d7a6b;
+    --text: #1e2a2a;
+    --text2: #5a7070;
+    --text3: #9ab0b0;
+    --border: #dde8e8;
+    --danger: #e05a5a;
+    --warn: #f0a040;
+    --good: #4a9e8e;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 2px 12px rgba(74,158,142,0.08);
+    --shadow-md: 0 4px 24px rgba(74,158,142,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ─── Login Screen ─── */
+  #login-screen {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    padding: 24px;
+  }
+  .login-logo {
+    font-size: 48px;
+    line-height: 1;
+  }
+  .login-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent-dark);
+    letter-spacing: -0.5px;
+  }
+  .login-sub {
+    color: var(--text2);
+    font-size: 14px;
+    text-align: center;
+    max-width: 280px;
+  }
+
+  /* ─── Header ─── */
+  #app { display: none; min-height: 100vh; }
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+  }
+  .header-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--accent-light);
+  }
+  .btn-icon {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    color: var(--text2);
+    font-size: 18px;
+    transition: background 0.15s;
+  }
+  .btn-icon:hover { background: var(--surface2); }
+
+  /* ─── Nav Tabs ─── */
+  .nav-tabs {
+    background: var(--surface);
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .tab-btn {
+    flex: none;
+    padding: 14px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text3);
+    white-space: nowrap;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* ─── Main Content ─── */
+  main { padding: 20px 20px 80px; max-width: 640px; margin: 0 auto; }
+
+  /* ─── Date Picker Bar ─── */
+  .date-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+  .date-bar input[type="date"] {
+    border: none;
+    background: none;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    cursor: pointer;
+    outline: none;
+  }
+  .btn-today {
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    border: none;
+    border-radius: 6px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-today:hover { background: var(--accent); color: #fff; }
+
+  /* ─── Cards ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text2);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ─── Body Stats ─── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+  .stat-item label {
+    font-size: 11px;
+    color: var(--text3);
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .stat-item input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    background: var(--surface2);
+    outline: none;
+    transition: border-color 0.15s;
+    text-align: center;
+  }
+  .stat-item input:focus { border-color: var(--accent); background: #fff; }
+  .stat-unit {
+    font-size: 11px;
+    color: var(--text3);
+    text-align: right;
+    margin-top: 2px;
+  }
+
+  /* ─── Bowel Toggle ─── */
+  .bowel-toggle {
+    display: flex;
+    gap: 12px;
+  }
+  .bowel-btn {
+    flex: 1;
+    padding: 14px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    cursor: pointer;
+    font-size: 22px;
+    text-align: center;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+    color: var(--text2);
+  }
+  .bowel-btn.active-yes {
+    border-color: var(--good);
+    background: #e8f5f2;
+    color: var(--good);
+  }
+  .bowel-btn.active-no {
+    border-color: var(--warn);
+    background: #fdf0e0;
+    color: var(--warn);
+  }
+  .bowel-label { font-size: 12px; }
+
+  /* ─── Exercise Select ─── */
+  .exercise-select-wrap { display: flex; flex-direction: column; gap: 8px; }
+  .exercise-row { display: flex; align-items: center; gap: 8px; }
+  .exercise-select {
+    flex: 1;
+    padding: 9px 30px 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface2);
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239ab0b0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    transition: border-color 0.15s;
+  }
+  .exercise-select:focus { border-color: var(--accent); background-color: #fff; }
+  .exercise-select.selected { border-color: #7b6fdc; background-color: #f5f3ff; color: #5a4dcc; }
+  .btn-ex-add {
+    padding: 8px 14px;
+    border: 1.5px solid var(--accent-light);
+    border-radius: var(--radius-sm);
+    background: var(--accent-light);
+    color: var(--accent-dark);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .btn-ex-add:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-ex-remove {
+    padding: 6px 10px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    color: var(--text3);
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-ex-remove:hover { background: #ffe0e0; color: var(--danger); }
+
+  /* ─── BMI Display ─── */
+  .bmi-display {
+    margin-top: 14px;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .bmi-value { font-size: 28px; font-weight: 800; letter-spacing: -1px; }
+  .bmi-label { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .bmi-detail { font-size: 12px; color: var(--text3); }
+
+  /* ─── Memo ─── */
+  .memo-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface2);
+    outline: none;
+    resize: none;
+    min-height: 100px;
+    font-family: inherit;
+    line-height: 1.7;
+    transition: border-color 0.15s;
+  }
+  .memo-textarea:focus { border-color: var(--accent); background: #fff; }
+  .memo-char-count { font-size: 11px; color: var(--text3); text-align: right; margin-top: 4px; }
+
+  /* ─── Meal Inputs ─── */
+  .meal-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .meal-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .meal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .meal-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .meal-item textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface2);
+    outline: none;
+    resize: none;
+    min-height: 60px;
+    font-family: inherit;
+    transition: border-color 0.15s;
+  }
+  .meal-item textarea:focus { border-color: var(--accent); background: #fff; }
+
+  /* ─── Photo Grid ─── */
+  .photo-section { margin-top: 12px; }
+  .photo-type-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .photo-type-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .photo-type-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .photo-thumb {
+    aspect-ratio: 1;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    position: relative;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .photo-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .photo-thumb .del-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    font-size: 12px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .photo-thumb:hover .del-btn { display: flex; }
+  .photo-upload-btn {
+    aspect-ratio: 1;
+    border: 2px dashed var(--accent-light);
+    border-radius: var(--radius-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    transition: background 0.15s;
+    background: #f5fbf9;
+  }
+  .photo-upload-btn:hover { background: var(--accent-light); }
+  .photo-upload-btn .icon { font-size: 24px; }
+  .photo-upload-input { display: none; }
+
+  /* ─── Save Button ─── */
+  .save-area {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, var(--surface) 70%, transparent);
+    padding: 16px 20px 24px;
+    display: flex;
+    justify-content: center;
+  }
+  .btn-save {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 28px;
+    padding: 15px 48px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(74,158,142,0.35);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 240px;
+    justify-content: center;
+  }
+  .btn-save:hover { background: var(--accent-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(74,158,142,0.4); }
+  .btn-save:disabled { background: var(--text3); box-shadow: none; transform: none; cursor: not-allowed; }
+
+  /* ─── History Tab ─── */
+  .history-header {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .history-header input[type="month"] {
+    padding: 8px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 700;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+  }
+  .history-list { display: flex; flex-direction: column; gap: 12px; }
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: box-shadow 0.15s;
+  }
+  .history-item:hover { box-shadow: var(--shadow-md); }
+  .history-item-header {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+  }
+  .history-date {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .history-stats {
+    display: flex;
+    gap: 14px;
+    font-size: 13px;
+  }
+  .hstat { color: var(--text2); display: flex; align-items: center; gap: 3px; }
+  .hstat strong { color: var(--accent-dark); font-size: 15px; font-weight: 700; }
+  .history-detail {
+    display: none;
+    padding: 0 16px 14px;
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .history-detail.open { display: block; }
+  .detail-row { padding: 6px 0; font-size: 13px; color: var(--text2); display: flex; gap: 8px; }
+  .detail-row span:first-child { min-width: 50px; font-weight: 600; color: var(--text3); }
+  .detail-photos { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .detail-photo-thumb {
+    width: 60px;
+    height: 60px;
+    border-radius: 6px;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+
+  /* ─── Graph Tab ─── */
+  .chart-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+  }
+  .chart-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text2);
+    margin-bottom: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  canvas { width: 100% !important; }
+
+  /* ─── Toast ─── */
+  #toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 24px;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    transition: all 0.25s;
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 200;
+  }
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ─── Loading Overlay ─── */
+  .loading {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── Photo Lightbox ─── */
+  #lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #lightbox.show { display: flex; }
+  #lightbox img {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: var(--radius);
+    object-fit: contain;
+  }
+  #lightbox-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ─── Setup Guide Modal ─── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 400;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 24px 20px 32px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  @media (min-width: 640px) {
+    .modal-overlay { align-items: center; }
+    .modal { border-radius: var(--radius); max-width: 480px; }
+  }
+  .modal h3 { font-size: 17px; font-weight: 700; margin-bottom: 16px; color: var(--accent-dark); }
+  .setup-step {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .setup-step:last-child { border-bottom: none; }
+  .step-num {
+    width: 26px;
+    height: 26px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .step-body p { font-size: 13px; color: var(--text2); margin-top: 3px; }
+  .step-body strong { font-size: 14px; color: var(--text); }
+  .btn-modal-close {
+    width: 100%;
+    margin-top: 20px;
+    padding: 14px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  input[type="text"].setting-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface2);
+    outline: none;
+    margin-top: 8px;
+  }
+  input[type="text"].setting-input:focus { border-color: var(--accent); background: #fff; }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 400px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .photo-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- =============== LOGIN =============== -->
+<div id="login-screen">
+  <div class="login-logo">🌿</div>
+  <div>
+    <div class="login-title">からだ記録</div>
+    <div class="login-sub">体重・食事・写真を毎日記録。Googleドライブで同期します。</div>
+  </div>
+  <div id="g_id_onload"
+       data-client_id="YOUR_CLIENT_ID"
+       data-callback="handleCredentialResponse"
+       data-auto_prompt="false">
+  </div>
+  <div class="g_id_signin"
+       data-type="standard"
+       data-size="large"
+       data-theme="outline"
+       data-text="Googleアカウントでログイン"
+       data-shape="rectangular"
+       data-logo_alignment="left">
+  </div>
+  <p style="font-size:12px;color:var(--text3);text-align:center;max-width:300px;">
+    ⚙️ まず<strong style="color:var(--text2)">設定</strong>でGoogle Client IDを入力してください
+  </p>
+</div>
+
+<!-- =============== APP =============== -->
+<div id="app">
+  <header>
+    <div class="header-title">🌿 からだ記録</div>
+    <div class="header-right">
+      <img id="user-avatar" class="user-avatar" src="" alt="" style="display:none">
+      <button class="btn-icon" onclick="openSetup()" title="設定">⚙️</button>
+      <button class="btn-icon" onclick="signOut()" title="ログアウト">🚪</button>
+    </div>
+  </header>
+
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="showTab('record')" id="tab-record">📝 記録</button>
+    <button class="tab-btn" onclick="showTab('history')" id="tab-history">📅 カレンダー</button>
+    <button class="tab-btn" onclick="showTab('graph')" id="tab-graph">📈 グラフ</button>
+  </div>
+
+  <main>
+    <!-- ───── 記録タブ ───── -->
+    <div id="pane-record">
+      <div class="date-bar">
+        <input type="date" id="record-date" onchange="loadDayData()">
+        <button class="btn-today" onclick="setToday()">今日</button>
+      </div>
+
+      <!-- 体重・体脂肪 -->
+      <div class="card">
+        <div class="card-title">⚖️ 体計測</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <label>体重</label>
+            <input type="number" id="weight" placeholder="0.0" step="0.1" min="0" max="300" oninput="calcBMI()">
+            <div class="stat-unit">kg</div>
+          </div>
+          <div class="stat-item">
+            <label>体脂肪率</label>
+            <input type="number" id="fat" placeholder="0.0" step="0.1" min="0" max="60">
+            <div class="stat-unit">%</div>
+          </div>
+          <div class="stat-item">
+            <label>排便</label>
+            <div class="bowel-toggle" style="margin-top:4px">
+              <button class="bowel-btn" id="bowel-yes" onclick="setBowel('yes')">💚<span class="bowel-label">あり</span></button>
+              <button class="bowel-btn" id="bowel-no" onclick="setBowel('no')">💛<span class="bowel-label">なし</span></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- BMI自動計算 -->
+        <div id="bmi-display" class="bmi-display" style="display:none">
+          <div>
+            <div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:2px">BMI</div>
+            <span class="bmi-value" id="bmi-value">--</span>
+          </div>
+          <div style="text-align:right">
+            <span class="bmi-label" id="bmi-label">--</span>
+            <div class="bmi-detail" id="bmi-detail"></div>
+          </div>
+        </div>
+
+        <!-- 運動 -->
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <div style="font-size:12px;font-weight:700;color:var(--text3);letter-spacing:0.4px">🏃 運動</div>
+            <button class="btn-ex-add" onclick="addExerciseRow()">＋ 追加</button>
+          </div>
+          <div class="exercise-select-wrap" id="exercise-rows"></div>
+          <textarea id="exercise-memo" class="memo-textarea" style="min-height:44px;margin-top:8px;font-size:13px" placeholder="運動の詳細（距離・時間・内容など）" rows="2"></textarea>
+        </div>
+      </div>
+
+      <!-- 食事 -->
+      <div class="card">
+        <div class="card-title">🍽 食事内容</div>
+        <div class="meal-item">
+          <div class="meal-label">🌅 朝食</div>
+          <textarea id="breakfast" placeholder="例：ご飯・みそ汁・卵焼き" rows="2"></textarea>
+        </div>
+        <div class="meal-item">
+          <div class="meal-label">☀️ 昼食</div>
+          <textarea id="lunch" placeholder="例：チキンサラダ・スープ" rows="2"></textarea>
+        </div>
+        <div class="meal-item">
+          <div class="meal-label">🌙 夕食</div>
+          <textarea id="dinner" placeholder="例：魚・野菜炒め・ご飯少量" rows="2"></textarea>
+        </div>
+        <div class="meal-item">
+          <div class="meal-label">🍪 間食</div>
+          <textarea id="snack" placeholder="例：ナッツ少々" rows="2"></textarea>
+        </div>
+      </div>
+
+      <!-- 写真 -->
+      <div class="card">
+        <div class="card-title">📷 写真</div>
+        <div class="photo-type-tabs">
+          <button class="photo-type-btn active" onclick="setPhotoType('body')" id="pt-body">👤 体型</button>
+          <button class="photo-type-btn" onclick="setPhotoType('meal')" id="pt-meal">🍽 食事</button>
+        </div>
+        <div class="photo-grid" id="photo-grid">
+          <!-- photos inserted here -->
+        </div>
+        <input type="file" id="photo-input" class="photo-upload-input" accept="image/*" multiple onchange="handlePhotoUpload(event)">
+      </div>
+
+      <!-- メモ（日記） -->
+      <div class="card">
+        <div class="card-title">📔 メモ・日記</div>
+        <textarea id="memo" class="memo-textarea" placeholder="今日の体調・気づき・コメントなど自由に記録できます" oninput="updateMemoCount()"></textarea>
+        <div class="memo-char-count" id="memo-count">0文字</div>
+      </div>
+
+      <div style="height:80px"></div>
+    </div>
+
+    <!-- ───── カレンダータブ ───── -->
+    <div id="pane-history" style="display:none">
+      <div class="history-header">
+        <input type="month" id="history-month" onchange="loadHistory()">
+        <button class="btn-today" onclick="setHistoryToday()">今月</button>
+      </div>
+      <div id="history-list" class="history-list">
+        <p style="text-align:center;color:var(--text3);padding:40px 0">データを読み込んでいます…</p>
+      </div>
+    </div>
+
+    <!-- ───── グラフタブ ───── -->
+    <div id="pane-graph" style="display:none">
+      <div class="chart-container">
+        <div class="chart-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>📉 体重の推移 (kg)</span>
+          <span id="goal-weight-label" style="font-size:11px;color:#e05a5a;font-weight:600"></span>
+        </div>
+        <canvas id="chart-weight" height="200"></canvas>
+      </div>
+      <div class="chart-container">
+        <div class="chart-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>📊 体脂肪率の推移 (%)</span>
+          <span id="goal-fat-label" style="font-size:11px;color:#e05a5a;font-weight:600"></span>
+        </div>
+        <canvas id="chart-fat" height="200"></canvas>
+      </div>
+      <div class="chart-container">
+        <div class="chart-title" style="display:flex;justify-content:space-between;align-items:center">
+          <span>🧮 BMIの推移</span>
+          <span id="goal-bmi-label" style="font-size:11px;color:#e05a5a;font-weight:600"></span>
+        </div>
+        <canvas id="chart-bmi" height="200"></canvas>
+      </div>
+    </div>
+  </main>
+
+  <!-- Save Button -->
+  <div class="save-area">
+    <button class="btn-save" id="save-btn" onclick="saveRecord()">💾 この日の記録を保存</button>
+  </div>
+</div>
+
+<!-- ───── Lightbox ───── -->
+<div id="lightbox" onclick="closeLightbox()">
+  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<!-- ───── Setup Modal ───── -->
+<div class="modal-overlay" id="setup-modal">
+  <div class="modal">
+    <h3>⚙️ 初期設定</h3>
+    <div class="setup-step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <strong>Google Client IDを入力</strong>
+        <p>Google Cloud ConsoleでOAuth 2.0クライアントIDを作成してください。</p>
+        <input type="text" class="setting-input" id="client-id-input" placeholder="xxxxxxxx.apps.googleusercontent.com">
+      </div>
+    </div>
+    <div class="setup-step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <strong>スコープ設定</strong>
+        <p>Cloud Consoleで以下のAPIを有効化してください。</p>
+        <p style="font-family:monospace;background:var(--surface2);padding:6px 8px;border-radius:6px;margin-top:6px;font-size:12px;word-break:break-all">
+          Google Drive API<br>Google Sheets API
+        </p>
+      </div>
+    </div>
+    <div class="setup-step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <strong>スプレッドシートID（任意）</strong>
+        <p>既存のシートを使う場合はIDを入力。空欄なら自動作成します。</p>
+        <input type="text" class="setting-input" id="sheet-id-input" placeholder="スプレッドシートID（任意）">
+      </div>
+    </div>
+    <div class="setup-step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <strong>身長（BMI計算に使用）</strong>
+        <p>入力すると体重入力時にBMIを自動計算します。</p>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <input type="number" class="setting-input" id="height-input" placeholder="例: 160" step="0.1" min="100" max="250" style="margin-top:0;flex:1">
+          <span style="font-size:13px;color:var(--text2);flex-shrink:0">cm</span>
+        </div>
+      </div>
+    </div>
+    <div class="setup-step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <strong>目標値（グラフに目標ラインを表示）</strong>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
+          <div>
+            <p style="font-size:11px;color:var(--text3);margin-bottom:3px">体重 (kg)</p>
+            <input type="number" class="setting-input" id="goal-weight-input" placeholder="例: 55" step="0.1" style="margin-top:0">
+          </div>
+          <div>
+            <p style="font-size:11px;color:var(--text3);margin-bottom:3px">体脂肪 (%)</p>
+            <input type="number" class="setting-input" id="goal-fat-input" placeholder="例: 20" step="0.1" style="margin-top:0">
+          </div>
+          <div>
+            <p style="font-size:11px;color:var(--text3);margin-bottom:3px">BMI</p>
+            <input type="number" class="setting-input" id="goal-bmi-input" placeholder="例: 22" step="0.1" style="margin-top:0">
+          </div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-modal-close" onclick="saveSetup()">設定を保存してログインへ</button>
+  </div>
+</div>
+
+<!-- ───── Toast ───── -->
+<div id="toast"></div>
+
+<script>
+// ===================================================
+// CONFIG
+// ===================================================
+const SCOPES = 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/spreadsheets';
+const DRIVE_FOLDER_NAME = 'からだ記録_photos';
+const SHEET_NAME = 'からだ記録';
+
+let config = {
+  clientId: localStorage.getItem('diet_client_id') || '',
+  sheetId: localStorage.getItem('diet_sheet_id') || '',
+  height: parseFloat(localStorage.getItem('diet_height')) || 0,
+  goalWeight: parseFloat(localStorage.getItem('diet_goal_weight')) || 0,
+  goalFat: parseFloat(localStorage.getItem('diet_goal_fat')) || 0,
+  goalBmi: parseFloat(localStorage.getItem('diet_goal_bmi')) || 0,
+};
+let state = {
+  accessToken: null,
+  driveFolder: null,
+  sheetId: null,
+  currentDate: todayStr(),
+  bowel: null,
+  exerciseList: [], // ['ウォーク', '筋トレ', ...]
+  photoType: 'body',
+  photos: { body: [], meal: [] },
+};
+let charts = {};
+let allData = [];
+
+// ===================================================
+// UTILS
+// ===================================================
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+function toast(msg, dur = 2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), dur);
+}
+function showTab(name) {
+  ['record','history','graph'].forEach(t => {
+    document.getElementById('pane-' + t).style.display = t === name ? '' : 'none';
+    document.getElementById('tab-' + t).classList.toggle('active', t === name);
+  });
+  document.querySelector('.save-area').style.display = name === 'record' ? '' : 'none';
+  if (name === 'history') loadHistory();
+  if (name === 'graph') loadGraphData();
+}
+function setToday() {
+  document.getElementById('record-date').value = todayStr();
+  loadDayData();
+}
+function setHistoryToday() {
+  document.getElementById('history-month').value = todayStr().slice(0,7);
+  loadHistory();
+}
+
+// ===================================================
+// AUTH & SETUP
+// ===================================================
+function openSetup() {
+  document.getElementById('client-id-input').value = config.clientId;
+  document.getElementById('sheet-id-input').value = config.sheetId;
+  document.getElementById('height-input').value = config.height || '';
+  document.getElementById('goal-weight-input').value = config.goalWeight || '';
+  document.getElementById('goal-fat-input').value = config.goalFat || '';
+  document.getElementById('goal-bmi-input').value = config.goalBmi || '';
+  document.getElementById('setup-modal').classList.add('show');
+}
+function saveSetup() {
+  const cid = document.getElementById('client-id-input').value.trim();
+  const sid = document.getElementById('sheet-id-input').value.trim();
+  const h   = parseFloat(document.getElementById('height-input').value) || 0;
+  const gw  = parseFloat(document.getElementById('goal-weight-input').value) || 0;
+  const gf  = parseFloat(document.getElementById('goal-fat-input').value) || 0;
+  const gb  = parseFloat(document.getElementById('goal-bmi-input').value) || 0;
+  if (cid) { config.clientId = cid; localStorage.setItem('diet_client_id', cid); }
+  if (sid) { config.sheetId = sid; localStorage.setItem('diet_sheet_id', sid); }
+  config.height = h; localStorage.setItem('diet_height', h);
+  config.goalWeight = gw; localStorage.setItem('diet_goal_weight', gw);
+  config.goalFat = gf; localStorage.setItem('diet_goal_fat', gf);
+  config.goalBmi = gb; localStorage.setItem('diet_goal_bmi', gb);
+  document.getElementById('setup-modal').classList.remove('show');
+  calcBMI();
+  if (cid) toast('設定を保存しました。ページを再読み込みしてください。');
+  else toast('設定を保存しました');
+}
+
+function handleCredentialResponse(response) {
+  // id_token → get access_token via OAuth2 token flow
+  requestAccessToken();
+}
+
+function requestAccessToken() {
+  if (!config.clientId) {
+    openSetup();
+    return;
+  }
+  const client = google.accounts.oauth2.initTokenClient({
+    client_id: config.clientId,
+    scope: SCOPES,
+    callback: async (tokenResponse) => {
+      if (tokenResponse.error) { toast('認証エラー: ' + tokenResponse.error); return; }
+      state.accessToken = tokenResponse.access_token;
+      await initApp();
+    },
+  });
+  client.requestAccessToken();
+}
+
+// Auto-init if client id set
+window.addEventListener('load', () => {
+  if (config.clientId) {
+    document.getElementById('g_id_onload').setAttribute('data-client_id', config.clientId);
+  }
+  // If already have token (session), skip – user must click login
+});
+
+async function initApp() {
+  // Get user info
+  try {
+    const r = await gapi('https://www.googleapis.com/oauth2/v3/userinfo');
+    if (r.picture) {
+      const av = document.getElementById('user-avatar');
+      av.src = r.picture;
+      av.style.display = '';
+    }
+  } catch(e) {}
+
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = '';
+
+  // Init date
+  const today = todayStr();
+  document.getElementById('record-date').value = today;
+  document.getElementById('history-month').value = today.slice(0,7);
+  state.currentDate = today;
+
+  // Ensure Drive folder
+  await ensureDriveFolder();
+  // Ensure Spreadsheet
+  await ensureSheet();
+  // Load today's data
+  await loadDayData();
+  renderPhotoGrid();
+}
+
+function signOut() {
+  google.accounts.oauth2.revoke(state.accessToken, () => {
+    state.accessToken = null;
+    document.getElementById('login-screen').style.display = '';
+    document.getElementById('app').style.display = 'none';
+  });
+}
+
+// ===================================================
+// GOOGLE API HELPERS
+// ===================================================
+async function gapi(url, options = {}) {
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      'Authorization': 'Bearer ' + state.accessToken,
+      'Content-Type': 'application/json',
+      ...(options.headers || {}),
+    },
+  });
+  if (!res.ok) {
+    const e = await res.text();
+    throw new Error(e);
+  }
+  return res.json();
+}
+
+async function gapiUpload(metadata, blob) {
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify(metadata)], {type: 'application/json'}));
+  form.append('file', blob);
+  const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,thumbnailLink,webViewLink', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + state.accessToken },
+    body: form,
+  });
+  return res.json();
+}
+
+// ===================================================
+// DRIVE: FOLDER
+// ===================================================
+async function ensureDriveFolder() {
+  const res = await gapi(`https://www.googleapis.com/drive/v3/files?q=name='${DRIVE_FOLDER_NAME}'+and+mimeType='application/vnd.google-apps.folder'+and+trashed=false&fields=files(id,name)`);
+  if (res.files && res.files.length > 0) {
+    state.driveFolder = res.files[0].id;
+  } else {
+    const created = await gapi('https://www.googleapis.com/drive/v3/files', {
+      method: 'POST',
+      body: JSON.stringify({ name: DRIVE_FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' }),
+    });
+    state.driveFolder = created.id;
+  }
+}
+
+// ===================================================
+// SHEETS: INIT
+// ===================================================
+async function ensureSheet() {
+  if (config.sheetId) {
+    state.sheetId = config.sheetId;
+    return;
+  }
+  // Check if existing
+  const res = await gapi(`https://www.googleapis.com/drive/v3/files?q=name='${SHEET_NAME}'+and+mimeType='application/vnd.google-apps.spreadsheet'+and+trashed=false&fields=files(id,name)`);
+  if (res.files && res.files.length > 0) {
+    state.sheetId = res.files[0].id;
+  } else {
+    // Create new
+    const created = await gapi('https://www.googleapis.com/v4/spreadsheets', {
+      method: 'POST',
+      body: JSON.stringify({
+        properties: { title: SHEET_NAME },
+        sheets: [{ properties: { title: 'records' } }],
+      }),
+    });
+    state.sheetId = created.spreadsheetId;
+    // Write header
+    await sheetsWrite('records!A1:L1', [['日付','体重(kg)','体脂肪(%)','排便','朝食','昼食','夕食','間食','体型写真ID','食事写真ID','運動','メモ']]);
+  }
+  localStorage.setItem('diet_sheet_id', state.sheetId);
+  config.sheetId = state.sheetId;
+}
+
+async function sheetsRead(range) {
+  const res = await gapi(`https://sheets.googleapis.com/v4/spreadsheets/${state.sheetId}/values/${encodeURIComponent(range)}`);
+  return res.values || [];
+}
+
+async function sheetsWrite(range, values) {
+  await gapi(`https://sheets.googleapis.com/v4/spreadsheets/${state.sheetId}/values/${encodeURIComponent(range)}?valueInputOption=RAW`, {
+    method: 'PUT',
+    body: JSON.stringify({ values }),
+  });
+}
+
+async function sheetsAppend(values) {
+  await gapi(`https://sheets.googleapis.com/v4/spreadsheets/${state.sheetId}/values/records!A:L:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, {
+    method: 'POST',
+    body: JSON.stringify({ values: [values] }),
+  });
+}
+
+// ===================================================
+// LOAD / SAVE RECORD
+// ===================================================
+async function findRowByDate(date) {
+  const rows = await sheetsRead('records!A:A');
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][0] === date) return i + 1; // 1-indexed sheet row
+  }
+  return null;
+}
+
+async function loadDayData() {
+  const date = document.getElementById('record-date').value;
+  state.currentDate = date;
+  state.bowel = null;
+  state.exerciseList = [];
+  state.photos = { body: [], meal: [] };
+
+  // Reset form
+  ['weight','fat','breakfast','lunch','dinner','snack','exercise-memo','memo'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('bowel-yes').classList.remove('active-yes');
+  document.getElementById('bowel-no').classList.remove('active-no');
+  document.getElementById('exercise-rows').innerHTML = '';
+  updateMemoCount();
+  calcBMI();
+  renderPhotoGrid();
+
+  if (!state.sheetId) return;
+
+  try {
+    const row = await findRowByDate(date);
+    if (!row) return;
+    const vals = await sheetsRead(`records!A${row}:L${row}`);
+    if (!vals[0]) return;
+    const [d, weight, fat, bowel, breakfast, lunch, dinner, snack, bodyPhotoIds, mealPhotoIds, exercise, memo] = vals[0];
+    document.getElementById('weight').value = weight || '';
+    document.getElementById('fat').value = fat || '';
+    if (bowel === 'あり') setBowel('yes', true);
+    else if (bowel === 'なし') setBowel('no', true);
+    document.getElementById('breakfast').value = breakfast || '';
+    document.getElementById('lunch').value = lunch || '';
+    document.getElementById('dinner').value = dinner || '';
+    document.getElementById('snack').value = snack || '';
+    // 運動
+    if (exercise) {
+      const parts = exercise.split(',');
+      const validEx = ['ウォーク','筋トレ','ストレッチ','スクワット','その他'];
+      let memoVal = '';
+      parts.forEach(p => {
+        if (validEx.includes(p)) {
+          state.exerciseList.push(p);
+          addExerciseRow(p);
+        } else if (p.startsWith('memo:')) {
+          memoVal = p.slice(5);
+        }
+      });
+      document.getElementById('exercise-memo').value = memoVal;
+    }
+    // メモ
+    document.getElementById('memo').value = memo || '';
+    updateMemoCount();
+    calcBMI();
+
+    // Load photo thumbnails
+    if (bodyPhotoIds) await loadPhotoThumbs(bodyPhotoIds.split(','), 'body');
+    if (mealPhotoIds) await loadPhotoThumbs(mealPhotoIds.split(','), 'meal');
+    renderPhotoGrid();
+  } catch(e) {
+    console.warn('loadDayData error:', e);
+  }
+}
+
+async function loadPhotoThumbs(ids, type) {
+  for (const id of ids) {
+    if (!id) continue;
+    try {
+      const meta = await gapi(`https://www.googleapis.com/drive/v3/files/${id}?fields=id,name,thumbnailLink`);
+      state.photos[type].push({ fileId: id, name: meta.name, thumb: meta.thumbnailLink });
+    } catch(e) {}
+  }
+}
+
+async function saveRecord() {
+  const btn = document.getElementById('save-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading"></span> 保存中…';
+
+  try {
+    const date = state.currentDate;
+    const exMemo = document.getElementById('exercise-memo').value.trim();
+    const exerciseVal = [
+      ...state.exerciseList,
+      ...(exMemo ? ['memo:' + exMemo] : [])
+    ].join(',');
+    const row = [
+      date,
+      document.getElementById('weight').value || '',
+      document.getElementById('fat').value || '',
+      state.bowel === 'yes' ? 'あり' : state.bowel === 'no' ? 'なし' : '',
+      document.getElementById('breakfast').value || '',
+      document.getElementById('lunch').value || '',
+      document.getElementById('dinner').value || '',
+      document.getElementById('snack').value || '',
+      state.photos.body.map(p=>p.fileId).join(','),
+      state.photos.meal.map(p=>p.fileId).join(','),
+      exerciseVal,
+      document.getElementById('memo').value || '',
+    ];
+
+    const existingRow = await findRowByDate(date);
+    if (existingRow) {
+      await sheetsWrite(`records!A${existingRow}:L${existingRow}`, [row]);
+    } else {
+      await sheetsAppend(row);
+    }
+    toast('✅ 保存しました！');
+  } catch(e) {
+    toast('❌ 保存に失敗しました: ' + e.message);
+    console.error(e);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '💾 この日の記録を保存';
+}
+
+// ===================================================
+// BOWEL
+// ===================================================
+function setBowel(val, silent = false) {
+  state.bowel = state.bowel === val && !silent ? null : val;
+  document.getElementById('bowel-yes').className = 'bowel-btn' + (state.bowel === 'yes' ? ' active-yes' : '');
+  document.getElementById('bowel-no').className = 'bowel-btn' + (state.bowel === 'no' ? ' active-no' : '');
+}
+
+// ===================================================
+// EXERCISE (プルダウン形式)
+// ===================================================
+const EX_OPTIONS = ['', 'ウォーク', '筋トレ', 'ストレッチ', 'スクワット', 'その他'];
+const EX_ICONS   = {'ウォーク':'🚶','筋トレ':'🏋️','ストレッチ':'🧘','スクワット':'🦵','その他':'✨'};
+
+function addExerciseRow(preset = '') {
+  const wrap = document.getElementById('exercise-rows');
+  const row = document.createElement('div');
+  row.className = 'exercise-row';
+  const sel = document.createElement('select');
+  sel.className = 'exercise-select';
+  sel.innerHTML = EX_OPTIONS.map(o =>
+    `<option value="${o}" ${o === preset ? 'selected' : ''}>${o ? EX_ICONS[o] + ' ' + o : '── 選択してください ──'}</option>`
+  ).join('');
+  if (preset) sel.classList.add('selected');
+  sel.onchange = () => {
+    sel.classList.toggle('selected', !!sel.value);
+    syncExerciseList();
+  };
+  const rmBtn = document.createElement('button');
+  rmBtn.className = 'btn-ex-remove';
+  rmBtn.textContent = '✕';
+  rmBtn.onclick = () => { row.remove(); syncExerciseList(); };
+  row.appendChild(sel);
+  row.appendChild(rmBtn);
+  wrap.appendChild(row);
+  syncExerciseList();
+}
+
+function syncExerciseList() {
+  state.exerciseList = Array.from(document.querySelectorAll('#exercise-rows .exercise-select'))
+    .map(s => s.value).filter(Boolean);
+}
+
+// ===================================================
+// BMI
+// ===================================================
+function calcBMI() {
+  const w = parseFloat(document.getElementById('weight').value);
+  const h = config.height;
+  const disp = document.getElementById('bmi-display');
+  if (!w || !h) { disp.style.display = 'none'; return; }
+  const hm = h / 100;
+  const bmi = w / (hm * hm);
+  disp.style.display = 'flex';
+  document.getElementById('bmi-value').textContent = bmi.toFixed(1);
+  let label, color, bg;
+  if      (bmi < 18.5) { label='低体重';       color='#3b82f6'; bg='#eff6ff'; }
+  else if (bmi < 25)   { label='普通体重 ✓';   color='#16a34a'; bg='#f0fdf4'; }
+  else if (bmi < 30)   { label='肥満度1';       color='#f59e0b'; bg='#fffbeb'; }
+  else                 { label='肥満度2以上';   color='#ef4444'; bg='#fef2f2'; }
+  const el = document.getElementById('bmi-label');
+  el.textContent = label;
+  el.style.color = color;
+  el.style.background = bg;
+  const standard = (22 * hm * hm).toFixed(1);
+  document.getElementById('bmi-detail').textContent = `標準体重 ${standard}kg`;
+}
+
+// ===================================================
+// MEMO
+// ===================================================
+function updateMemoCount() {
+  const len = document.getElementById('memo').value.length;
+  document.getElementById('memo-count').textContent = len + '文字';
+}
+
+// ===================================================
+// PHOTOS
+// ===================================================
+function setPhotoType(type) {
+  state.photoType = type;
+  document.getElementById('pt-body').classList.toggle('active', type === 'body');
+  document.getElementById('pt-meal').classList.toggle('active', type === 'meal');
+  renderPhotoGrid();
+}
+
+function renderPhotoGrid() {
+  const grid = document.getElementById('photo-grid');
+  const photos = state.photos[state.photoType];
+  grid.innerHTML = '';
+  photos.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'photo-thumb';
+    div.innerHTML = `<img src="${p.thumb || ''}" alt="${p.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 1 1%22/>'">
+      <button class="del-btn" onclick="removePhoto(${i})">✕</button>`;
+    div.querySelector('img').addEventListener('click', () => openLightbox(p.fileId));
+    grid.appendChild(div);
+  });
+  // Upload button
+  const add = document.createElement('div');
+  add.className = 'photo-upload-btn';
+  add.innerHTML = '<span class="icon">📷</span><span>追加</span>';
+  add.onclick = () => document.getElementById('photo-input').click();
+  grid.appendChild(add);
+}
+
+async function handlePhotoUpload(event) {
+  const files = Array.from(event.target.files);
+  if (!files.length) return;
+  const type = state.photoType;
+  toast('📤 写真をアップロード中…');
+
+  for (const file of files) {
+    try {
+      const date = state.currentDate;
+      const fname = `${type}_${date}_${Date.now()}_${file.name}`;
+      const meta = {
+        name: fname,
+        parents: [state.driveFolder],
+      };
+      const uploaded = await gapiUpload(meta, file);
+      // Make publicly readable (thumbnail access)
+      await gapi(`https://www.googleapis.com/drive/v3/files/${uploaded.id}/permissions`, {
+        method: 'POST',
+        body: JSON.stringify({ role: 'reader', type: 'anyone' }),
+      });
+      const thumbRes = await gapi(`https://www.googleapis.com/drive/v3/files/${uploaded.id}?fields=id,name,thumbnailLink`);
+      state.photos[type].push({ fileId: uploaded.id, name: fname, thumb: thumbRes.thumbnailLink });
+    } catch(e) {
+      toast('写真アップロード失敗: ' + e.message);
+      console.error(e);
+    }
+  }
+  event.target.value = '';
+  renderPhotoGrid();
+  toast('✅ 写真を追加しました');
+}
+
+function removePhoto(index) {
+  state.photos[state.photoType].splice(index, 1);
+  renderPhotoGrid();
+}
+
+function openLightbox(fileId) {
+  const url = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1200`;
+  document.getElementById('lightbox-img').src = url;
+  document.getElementById('lightbox').classList.add('show');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('show');
+  document.getElementById('lightbox-img').src = '';
+}
+
+// ===================================================
+// HISTORY
+// ===================================================
+async function loadHistory() {
+  const month = document.getElementById('history-month').value;
+  const list = document.getElementById('history-list');
+  list.innerHTML = '<p style="text-align:center;color:var(--text3);padding:40px 0">読み込み中…</p>';
+  if (!state.sheetId) return;
+
+  try {
+    const rows = await sheetsRead('records!A:J');
+    const filtered = rows.slice(1).filter(r => r[0] && r[0].startsWith(month))
+                         .sort((a,b) => b[0].localeCompare(a[0]));
+    allData = rows.slice(1).filter(r => r[0]);
+
+    if (!filtered.length) {
+      list.innerHTML = '<p style="text-align:center;color:var(--text3);padding:40px 0">この月の記録はありません</p>';
+      return;
+    }
+
+    list.innerHTML = '';
+    filtered.forEach(row => {
+      const [date, weight, fat, bowel, breakfast, lunch, dinner, snack, bodyIds, mealIds, exercise, memo] = row;
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      const d = new Date(date);
+      const dStr = `${d.getMonth()+1}月${d.getDate()}日（${'日月火水木金土'[d.getDay()]}）`;
+      // 運動アイコン表示
+      const exMap = {'ウォーク':'🚶','筋トレ':'🏋️','ストレッチ':'🧘','スクワット':'🦵','その他':'✨'};
+      const exKeys = (exercise||'').split(',').filter(k => exMap[k]);
+      const exIcons = exKeys.map(k => exMap[k]).join('');
+      // メモプレビュー（先頭30文字）
+      const memoPreview = memo ? memo.slice(0,30) + (memo.length > 30 ? '…' : '') : '';
+      item.innerHTML = `
+        <div class="history-item-header" onclick="this.nextElementSibling.classList.toggle('open')">
+          <div class="history-date">${dStr}</div>
+          <div class="history-stats">
+            ${weight ? `<div class="hstat"><strong>${weight}</strong>kg</div>` : ''}
+            ${fat ? `<div class="hstat"><strong>${fat}</strong>%</div>` : ''}
+            ${bowel === 'あり' ? '<div class="hstat">💚</div>' : bowel === 'なし' ? '<div class="hstat">💛</div>' : ''}
+            ${exIcons ? `<div class="hstat" title="運動">${exIcons}</div>` : ''}
+          </div>
+        </div>
+        <div class="history-detail">
+          ${breakfast ? `<div class="detail-row"><span>朝食</span><span>${breakfast}</span></div>` : ''}
+          ${lunch ? `<div class="detail-row"><span>昼食</span><span>${lunch}</span></div>` : ''}
+          ${dinner ? `<div class="detail-row"><span>夕食</span><span>${dinner}</span></div>` : ''}
+          ${snack ? `<div class="detail-row"><span>間食</span><span>${snack}</span></div>` : ''}
+          ${exKeys.length || (() => { const m=(exercise||'').split(',').find(p=>p.startsWith('memo:')); return m?m.slice(5):''; })()
+            ? `<div class="detail-row"><span>運動</span><span>${exIcons} ${(() => { const m=(exercise||'').split(',').find(p=>p.startsWith('memo:')); return m?m.slice(5):''; })()}</span></div>` : ''}
+          ${memo ? `<div class="detail-row" style="align-items:flex-start"><span>メモ</span><span style="white-space:pre-wrap;word-break:break-word">${memo}</span></div>` : ''}
+          <div class="detail-photos" id="dp-${date}"></div>
+          <button style="margin-top:10px;font-size:12px;padding:5px 12px;border:1.5px solid var(--accent);border-radius:6px;background:none;color:var(--accent);cursor:pointer;font-weight:600" onclick="editDay('${date}')">この日を編集</button>
+        </div>`;
+      list.appendChild(item);
+
+      // Load photo thumbs for history view
+      const allIds = [...(bodyIds||'').split(','), ...(mealIds||'').split(',')].filter(Boolean);
+      allIds.forEach(id => {
+        const img = document.createElement('img');
+        img.className = 'detail-photo-thumb';
+        img.src = `https://drive.google.com/thumbnail?id=${id}&sz=w200`;
+        img.onclick = () => openLightbox(id);
+        const container = item.querySelector(`#dp-${date}`);
+        if (container) container.appendChild(img);
+      });
+    });
+  } catch(e) {
+    list.innerHTML = '<p style="text-align:center;color:var(--danger);padding:40px 0">読み込みに失敗しました</p>';
+    console.error(e);
+  }
+}
+
+function editDay(date) {
+  document.getElementById('record-date').value = date;
+  showTab('record');
+  loadDayData();
+}
+
+// ===================================================
+// GRAPH
+// ===================================================
+async function loadGraphData() {
+  if (!state.sheetId) return;
+  try {
+    const rows = await sheetsRead('records!A:C');
+    allData = rows.slice(1).filter(r => r[0]).sort((a,b) => a[0].localeCompare(b[0]));
+    renderCharts();
+  } catch(e) {}
+}
+
+function renderCharts() {
+  const labels = allData.map(r => {
+    const d = new Date(r[0]);
+    return `${d.getMonth()+1}/${d.getDate()}`;
+  });
+  const weights = allData.map(r => parseFloat(r[1]) || null);
+  const fats    = allData.map(r => parseFloat(r[2]) || null);
+
+  // BMI計算
+  const bmis = config.height
+    ? weights.map(w => w ? parseFloat((w / Math.pow(config.height/100, 2)).toFixed(2)) : null)
+    : weights.map(() => null);
+
+  // 目標ラベル更新
+  document.getElementById('goal-weight-label').textContent = config.goalWeight ? `目標: ${config.goalWeight}kg` : '';
+  document.getElementById('goal-fat-label').textContent    = config.goalFat    ? `目標: ${config.goalFat}%`    : '';
+  document.getElementById('goal-bmi-label').textContent    = config.goalBmi    ? `目標: ${config.goalBmi}`     : '';
+
+  renderLineChart('chart-weight', labels, weights, '#4a9e8e', 'kg',  config.goalWeight || null);
+  renderLineChart('chart-fat',    labels, fats,    '#f0a040', '%',   config.goalFat    || null);
+  renderLineChart('chart-bmi',    labels, bmis,    '#7b6fdc', '',    config.goalBmi    || null);
+}
+
+function renderLineChart(canvasId, labels, data, color, unit, goalValue) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const valid = data.filter(v => v !== null);
+  if (!valid.length) {
+    const W2 = canvas.offsetWidth || 560;
+    canvas.width = W2; canvas.height = 200;
+    ctx.clearRect(0, 0, W2, 200);
+    ctx.fillStyle = '#9ab0b0'; ctx.textAlign = 'center';
+    ctx.font = '14px sans-serif';
+    ctx.fillText('データがありません', W2/2, 100);
+    return;
+  }
+
+  const W = canvas.offsetWidth || 560;
+  const H = 200;
+  canvas.width = W;
+  canvas.height = H;
+
+  const pad = { top: 20, right: 20, bottom: 40, left: 48 };
+  const cw = W - pad.left - pad.right;
+  const ch = H - pad.top - pad.bottom;
+
+  // 目標値を含めてスケール調整
+  const allVals = goalValue ? [...valid, goalValue] : valid;
+  const rawMin = Math.min(...allVals);
+  const rawMax = Math.max(...allVals);
+  const margin = (rawMax - rawMin) * 0.08 || 1;
+  const min = rawMin - margin;
+  const max = rawMax + margin;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Grid
+  ctx.strokeStyle = '#dde8e8';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (ch / 4) * i;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(W - pad.right, y); ctx.stroke();
+    const val = max - (max - min) * (i / 4);
+    ctx.fillStyle = '#9ab0b0';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(val.toFixed(1), pad.left - 6, y + 4);
+  }
+
+  // X labels
+  const step = Math.ceil(labels.length / 8);
+  ctx.fillStyle = '#9ab0b0';
+  ctx.font = '10px sans-serif';
+  ctx.textAlign = 'center';
+  labels.forEach((l, i) => {
+    if (i % step === 0) {
+      const x = pad.left + (i / (labels.length - 1 || 1)) * cw;
+      ctx.fillText(l, x, H - 8);
+    }
+  });
+
+  // 目標ライン
+  if (goalValue) {
+    const gy = pad.top + ch - ((goalValue - min) / (max - min || 1)) * ch;
+    ctx.save();
+    ctx.setLineDash([6, 4]);
+    ctx.strokeStyle = '#e05a5a';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(pad.left, gy); ctx.lineTo(W - pad.right, gy); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#e05a5a';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`目標 ${goalValue}${unit}`, pad.left + 4, gy - 4);
+    ctx.restore();
+  }
+
+  // Line
+  ctx.beginPath();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  let first = true;
+  data.forEach((v, i) => {
+    if (v === null) return;
+    const x = pad.left + (i / (data.length - 1 || 1)) * cw;
+    const y = pad.top + ch - ((v - min) / (max - min || 1)) * ch;
+    if (first) { ctx.moveTo(x, y); first = false; } else { ctx.lineTo(x, y); }
+  });
+  ctx.stroke();
+
+  // Dots
+  data.forEach((v, i) => {
+    if (v === null) return;
+    const x = pad.left + (i / (data.length - 1 || 1)) * cw;
+    const y = pad.top + ch - ((v - min) / (max - min || 1)) * ch;
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  });
+}
+
+// ===================================================
+// INIT
+// ===================================================
+window.addEventListener('DOMContentLoaded', () => {
+  const today = todayStr();
+  document.getElementById('record-date').value = today;
+  document.getElementById('history-month').value = today.slice(0,7);
+
+  if (!config.clientId) {
+    setTimeout(() => openSetup(), 800);
+  }
+  calcBMI();
+});
+</script>
+
+</body>
+</html>
