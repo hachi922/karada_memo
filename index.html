@@ -1176,16 +1176,7 @@ window.addEventListener('load', () => {
 });
 
 async function initApp() {
-  // Get user info
-  try {
-    const r = await gapi('https://www.googleapis.com/oauth2/v3/userinfo');
-    if (r.picture) {
-      const av = document.getElementById('user-avatar');
-      av.src = r.picture;
-      av.style.display = '';
-    }
-  } catch(e) {}
-
+  // まずアプリ画面を表示
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = '';
 
@@ -1195,12 +1186,22 @@ async function initApp() {
   document.getElementById('history-month').value = today.slice(0,7);
   state.currentDate = today;
 
+  // Get user info（失敗しても続行）
+  try {
+    const r = await gapi('https://www.googleapis.com/oauth2/v3/userinfo');
+    if (r && r.picture) {
+      const av = document.getElementById('user-avatar');
+      av.src = r.picture;
+      av.style.display = '';
+    }
+  } catch(e) { console.warn('userinfo取得失敗（続行）', e); }
+
   // Ensure Drive folder
-  await ensureDriveFolder();
+  try { await ensureDriveFolder(); } catch(e) { console.warn('Drive folder:', e); }
   // Ensure Spreadsheet
-  await ensureSheet();
+  try { await ensureSheet(); } catch(e) { console.warn('Sheet:', e); toast('⚠️ スプレッドシート初期化に失敗しました'); }
   // Load today's data
-  await loadDayData();
+  try { await loadDayData(); } catch(e) { console.warn('loadDayData:', e); }
   renderPhotoGrid();
 }
 
